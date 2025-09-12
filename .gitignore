@@ -1,0 +1,91 @@
+# --- Python ---
+__pycache__/
+*.py[cod]
+*.so
+*.pyd
+*.pyo
+*.pyd
+*.db
+
+# --- Virtual environments ---
+.env
+.venv
+env/
+venv/
+ENV/
+env.bak/
+venv.bak/
+
+# --- FastAPI / Uvicorn logs ---
+*.log
+*.pid
+
+# --- IDE & Editor files ---
+.vscode/
+.idea/
+*.swp
+*~
+
+# --- Byte-compiled / cache ---
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# --- Packaging ---
+*.manifest
+*.spec
+
+# --- Test & Coverage ---
+.coverage
+coverage.xml
+htmlcov/
+.pytest_cache/
+nosetests.xml
+test-results/
+.tox/
+
+# --- Environments & Configs ---
+.env.local
+.env.development
+.env.production
+.env.test
+
+# --- OS Specific ---
+.DS_Store
+Thumbs.db
+
+# --- Docker ---
+*.pid
+*.seed
+*.bak
+.dockerignore
+
+# --- PyInstaller ---
+*.manifest
+*.spec
+
+# --- MyPy / Type checking ---
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# --- Pyre type checker ---
+.pyre/
+
+# --- VS Code local settings ---
+.vscode/
+
+# --- Pycharm ---
+.idea/
+
+# --- SQLite DB files (if you use sqlite locally) ---
+*.sqlite3
+*.db
+
+# --- Node (if frontend is inside repo) ---
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
