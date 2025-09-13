@@ -1,7 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from deps import get_current_user
 from database import get_db
 from Models.budget import Budget, Expense, BudgetAllocation
+import models 
 from Schemas.budget import (
     BudgetCreate, BudgetUpdate, BudgetRead,
     ExpenseCreate, ExpenseUpdate, ExpenseRead
@@ -21,12 +23,16 @@ def get_user_budgets(user_id: int, db: Session = Depends(get_db)):
 
 # POST /user/budgets
 @router.post("/budgets", response_model=BudgetRead)
-def create_budget(budget: BudgetCreate, user_id: int, db: Session = Depends(get_db)):
+def create_budget(
+    budget: BudgetCreate,
+    user : models.User = Depends(get_current_user), 
+    db: Session = Depends(get_db)):
     new_budget = Budget(
-        user_id=user_id,
+        user_id=user.id,
         trip_id=budget.trip_id,
         amount=budget.amount,
-        period=budget.period
+        yearly_budget_id = budget.yearly_budget_id
+        
     )
     db.add(new_budget)
     db.flush()  # Get budget.id before allocations
@@ -110,3 +116,4 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     db.delete(expense)
     db.commit()
     return {"success": True, "deleted_id": expense_id}
+    

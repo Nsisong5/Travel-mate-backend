@@ -128,8 +128,8 @@ class Trip(Base):
     state = Column(String, default="", nullable=True)
     local_gov = Column(String, default="", nullable=True)
     country = Column(String, default="", nullable=True)
-    
-    
+    has_budget = Column(Boolean, server_default="false", nullable=True)
+    title = Column(String, nullable=True)
     # Relationship
     owner = relationship("User", back_populates="trips")
 

@@ -172,6 +172,14 @@ def trips_upcoming(db: Session = Depends(get_db), user: models.User = Depends(ge
 
 
 
+@app.get("/trips/{id}", response_model=schemas.TripOut)
+def trips_upcoming(
+    id: int,
+    db: Session = Depends(get_db), 
+    user: models.User = Depends(get_current_user)):
+    trip = db.query(models.Trip).filter(models.Trip.id == id).first()
+    return trip
+
 
 
 @app.post("/trips", response_model=schemas.TripOut)

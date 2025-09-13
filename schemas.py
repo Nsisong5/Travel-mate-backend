@@ -129,7 +129,9 @@ class TripOut(BaseModel):
     cost_estimated: bool
     created_at: datetime 
     rating: Optional[int] = 0
-    
+    country: str
+    has_budget: Optional[bool] = False
+    title : Optional[str] = "No Tag Name"
     class Config:
         from_attributes = True
         

@@ -48,7 +48,7 @@ class ExpenseRead(ExpenseBase):
 class BudgetBase(BaseModel):
     trip_id: int
     amount: float
-    period: str = "trip"
+
 
 class BudgetCreate(BudgetBase):
     allocatedBreakdown: List[BudgetAllocationCreate]

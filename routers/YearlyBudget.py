@@ -64,8 +64,7 @@ def update_yearly_budget(
     """
     Updates an existing yearly budget entry.
     """
-    print(user.yearly_budget_id)
-    db_budget = db.query(models.YearlyBudget).filter(models.YearlyBudget.id == user.yearly_budget_id).first()
+    db_budget = db.query(models.YearlyBudget).filter(models.YearlyBudget.user_id == user.id).first()
     if not db_budget:
         raise HTTPException(status_code=404, detail="Budget not found")
 
