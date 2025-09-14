@@ -7,7 +7,7 @@ class BudgetAllocationBase(BaseModel):
     category: str
     allocated: float
     spent: Optional[float] = 0.0
-    icon_name: Optional[str]
+    icon_name: Optional[str] = 'food'
 
 class BudgetAllocationCreate(BudgetAllocationBase):
     pass
@@ -48,7 +48,7 @@ class ExpenseRead(ExpenseBase):
 class BudgetBase(BaseModel):
     trip_id: int
     amount: float
-
+    yearly_budget_id: int
 
 class BudgetCreate(BudgetBase):
     allocatedBreakdown: List[BudgetAllocationCreate]
@@ -60,10 +60,8 @@ class BudgetUpdate(BaseModel):
 class BudgetRead(BudgetBase):
     id: int
     user_id: int
-    trip_name: Optional[str]
+    trip_name: Optional[str] = None
     allocatedBreakdown: List[BudgetAllocationRead]
-    confirmedSpent: float
-    plannedSpent: float
     created_at: datetime
     updated_at: datetime
 
