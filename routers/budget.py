@@ -27,12 +27,16 @@ def create_budget(
     budget: BudgetCreate,
     user : models.User = Depends(get_current_user), 
     db: Session = Depends(get_db)):
+    # Check if a budget already exists for this trip
+    existing_budget = db.query(Budget).filter(Budget.trip_id == budget.trip_id).first()
+    if existing_budget:
+        raise HTTPException(status_code=400, detail="Budget has already been created for this trip.")
+
     new_budget = Budget(
         user_id=user.id,
         trip_id=budget.trip_id,
         amount=budget.amount,
         yearly_budget_id = budget.yearly_budget_id
-        
     )
     db.add(new_budget)
     db.flush()  # Get budget.id before allocations
@@ -47,6 +51,7 @@ def create_budget(
 
     db.commit()
     db.refresh(new_budget)
+    print(new_budget)
     return new_budget
 
 
@@ -116,4 +121,22 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     db.delete(expense)
     db.commit()
     return {"success": True, "deleted_id": expense_id}
-    
+
+
+@router.get("/budgets/yearly/{yearly_trip_id}", response_model=dict)
+def get_yearly_trip_budgets(
+    yearly_trip_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Get all budgets for the current user that belong to a specific yearly_trip_id.
+    """
+    budgets = (
+        db.query(Budget)
+        .filter(Budget.user_id == user.id, Budget.yearly_budget_id == yearly_trip_id)
+        .all()
+    )
+    if not budgets:
+        raise HTTPException(status_code=404, detail="No budgets found for this yearly trip.")
+    return {"budgets": budgets, "count": len(budgets)}
