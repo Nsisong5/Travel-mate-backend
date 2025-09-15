@@ -123,9 +123,9 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     return {"success": True, "deleted_id": expense_id}
 
 
-@router.get("/budgets/yearly/{yearly_budget_id}", response_model=dict)
+@router.get("/budgets/yearly/{yearly_budget_id}")
 def get_yearly_budget_trip_budgets(
-    yearly_trip_id: int,
+    yearly_budget_id: int,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
