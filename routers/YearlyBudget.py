@@ -92,3 +92,11 @@ def delete_yearly_budget(budget_id: int, db: Session = Depends(get_db),
     db.commit()
     return {"message": "Budget deleted successfully"}
     
+    
+@router.get("/budgets/used/{id}")
+def get_yearly_budget_used(
+    id: int,
+    db: Session = Depends(get_db),
+    user: Models.User = Depends(get_current_user)):
+    db.query(Budget).filter   
+    

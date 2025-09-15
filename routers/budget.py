@@ -123,8 +123,8 @@ def delete_expense(expense_id: int, db: Session = Depends(get_db)):
     return {"success": True, "deleted_id": expense_id}
 
 
-@router.get("/budgets/yearly/{yearly_trip_id}", response_model=dict)
-def get_yearly_trip_budgets(
+@router.get("/budgets/yearly/{yearly_budget_id}", response_model=dict)
+def get_yearly_budget_trip_budgets(
     yearly_trip_id: int,
     user: models.User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -134,9 +134,9 @@ def get_yearly_trip_budgets(
     """
     budgets = (
         db.query(Budget)
-        .filter(Budget.user_id == user.id, Budget.yearly_budget_id == yearly_trip_id)
+        .filter(Budget.user_id == user.id, Budget.yearly_budget_id == yearly_budget_id)
         .all()
     )
     if not budgets:
         raise HTTPException(status_code=404, detail="No budgets found for this yearly trip.")
-    return {"budgets": budgets, "count": len(budgets)}
+    return budgets
