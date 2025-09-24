@@ -96,10 +96,11 @@ class TripCreate(BaseModel):
     means : str
     cost_estimated: bool = ...
     rating: Optional[int] = 0
+    travelers: Optional[int] = 1
     local_gov: Optional[str] = ""
     country:Optional[str] = ""
     state:  Optional[str] = ""
-    
+    title : Optional[str] = ""
     @validator('destination')
     def validate_destination(cls, v):
         if not v or not v.strip():
@@ -119,6 +120,7 @@ class TripOut(BaseModel):
     destination: str
     start_date: date
     end_date: date
+    city: Optional[str] = ""
     style: str
     duration: Optional[str] = None
     cost: Optional[float] = None
@@ -131,7 +133,11 @@ class TripOut(BaseModel):
     rating: Optional[int] = 0
     country: str
     has_budget: Optional[bool] = False
-    title : Optional[str] = "No Tag Name"
+    title : Optional[str] = ""
+    state : Optional[str] = ""
+    local_gov : Optional[str] = ""
+    travelers : Optional[int] = 1
+    
     class Config:
         from_attributes = True
         

@@ -4,16 +4,20 @@ from typing import List, Optional
 from datetime import datetime
 
 class BudgetAllocationBase(BaseModel):
-    category: str
+    name: str
     allocated: float
     spent: Optional[float] = 0.0
     icon_name: Optional[str] = 'food'
-
+    planned_spend: Optional[float] = 0.0
+    
 class BudgetAllocationCreate(BudgetAllocationBase):
-    pass
-
+      pass
 class BudgetAllocationRead(BudgetAllocationBase):
     id: int
+    budget_id: int
+    planned_spend: Optional[float] = 0.0
+     
+   
     class Config:
         orm_mode = True
 
@@ -55,15 +59,14 @@ class BudgetCreate(BudgetBase):
 
 class BudgetUpdate(BaseModel):
     amount: Optional[float]
-    allocatedBreakdown: Optional[List[BudgetAllocationCreate]]
-
+    allocatedBreakdown: Optional[List[BudgetAllocationCreate]] = []
+    
 class BudgetRead(BudgetBase):
     id: int
     user_id: int
-    trip_name: Optional[str] = None
-    allocatedBreakdown: List[BudgetAllocationRead]
+    trip_id: Optional[int] = None
     created_at: datetime
     updated_at: datetime
-
+    amount: int
     class Config:
         orm_mode = True

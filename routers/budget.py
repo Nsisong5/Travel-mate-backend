@@ -6,7 +6,8 @@ from Models.budget import Budget, Expense, BudgetAllocation
 import models 
 from Schemas.budget import (
     BudgetCreate, BudgetUpdate, BudgetRead,
-    ExpenseCreate, ExpenseUpdate, ExpenseRead
+    ExpenseCreate, ExpenseUpdate, ExpenseRead,
+    BudgetAllocationRead,BudgetAllocationCreate
 )
 
 router = APIRouter(prefix="/user", tags=["Budget & Expenses"])
@@ -22,12 +23,12 @@ def get_user_budgets(user_id: int, db: Session = Depends(get_db)):
 
 
 # POST /user/budgets
-@router.post("/budgets", response_model=BudgetRead)
+@router.post("/budgets")
 def create_budget(
     budget: BudgetCreate,
     user : models.User = Depends(get_current_user), 
     db: Session = Depends(get_db)):
-    # Check if a budget already exists for this trip
+    # Check if (a budget already exists for this trip
     existing_budget = db.query(Budget).filter(Budget.trip_id == budget.trip_id).first()
     if existing_budget:
         raise HTTPException(status_code=400, detail="Budget has already been created for this trip.")
@@ -44,9 +45,10 @@ def create_budget(
     for alloc in budget.allocatedBreakdown:
         db.add(BudgetAllocation(
             budget_id=new_budget.id,
-            category=alloc.category,
+            name=alloc.name,
             allocated=alloc.allocated,
-            icon_name=alloc.icon_name
+            icon_name=alloc.icon_name,
+            planned_spend=0.0
         ))
 
     db.commit()
@@ -70,7 +72,7 @@ def update_budget(budget_id: int, updates: BudgetUpdate, db: Session = Depends(g
         for alloc in updates.allocatedBreakdown:
             db.add(BudgetAllocation(
                 budget_id=budget.id,
-                category=alloc.category,
+                name=alloc.name,
                 allocated=alloc.allocated,
                 icon_name=alloc.icon_name
             ))
@@ -81,11 +83,11 @@ def update_budget(budget_id: int, updates: BudgetUpdate, db: Session = Depends(g
 
 
 # GET /user/expenses
-@router.get("/expenses", response_model=dict)
+@router.get("/expenses/{trip_id}", response_model=list[ExpenseRead])
 def get_expenses(trip_id: int, db: Session = Depends(get_db)):
     expenses = db.query(Expense).filter(Expense.trip_id == trip_id).all()
     total = sum(e.amount for e in expenses)
-    return {"expenses": expenses, "total": total, "page": 1}
+    return expenses 
 
 
 # POST /user/expenses
@@ -140,3 +142,51 @@ def get_yearly_budget_trip_budgets(
     if not budgets:
         raise HTTPException(status_code=404, detail="No budgets found for this yearly trip.")
     return budgets
+         
+
+
+@router.get("/budgets/trip/{trip_id}", response_model=BudgetRead)
+def get_trip_budget(
+    trip_id: int,
+    user: models.User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    budget = (
+        db.query(Budget)
+        .filter(Budget.user_id == user.id, Budget.trip_id == trip_id)
+        .first()
+    )
+    if not budget:
+        raise HTTPException(status_code=404, detail="No budget found for this trip.")
+    return budget
+         
+#allocations
+@router.get("/allocations",response_model=list[BudgetAllocationRead])
+def get_allocations(db: Session = Depends(get_db)):
+    allocations = db.query(BudgetAllocation).all()
+    # For MVP, pick latest budget as "current"
+    return allocations
+    
+    
+@router.get("/allocations/{budget_id}", response_model=list[BudgetAllocationRead])
+def get_allocations(
+    budget_id: int,
+    db: Session = Depends(get_db)):
+    allocations = db.query(BudgetAllocation).filter(BudgetAllocation.budget_id == budget_id).all()
+    # For MVP, pick latest budget as "current"
+    return allocations    
+    
+
+# PATCH /user/expenses/:id
+@router.patch("/allocations/{allocation_id}", response_model=BudgetAllocationRead)
+def update_allocation(allocation_id: str, updates: BudgetAllocationCreate, db: Session = Depends(get_db)):
+    allocation = db.query(BudgetAllocation).filter(BudgetAllocation.id == str(allocation_id)).first()
+    if not allocation:
+        raise HTTPException(status_code=404, detail="allocation not found")
+    
+    for key, value in updates.dict(exclude_unset=True).items():
+        setattr(allocation, key, value)
+
+    db.commit()
+    db.refresh(allocation)
+    return allocation        

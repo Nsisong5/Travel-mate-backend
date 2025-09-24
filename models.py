@@ -130,9 +130,10 @@ class Trip(Base):
     country = Column(String, default="", nullable=True)
     has_budget = Column(Boolean, server_default="false", nullable=True)
     title = Column(String, nullable=True)
+    travelers = Column(Integer, nullable=True)
     # Relationship
     owner = relationship("User", back_populates="trips")
-
+    etineraries = relationship("Etinerary",back_populates="trip")
     active_ai_recommendations = relationship(
         "ActiveTripAIRecommendation",
          back_populates="trip",

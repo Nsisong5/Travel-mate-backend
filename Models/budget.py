@@ -23,16 +23,18 @@ class Budget(Base):
     yearly_budget = relationship("YearlyBudget", back_populates="budget")
 
 
+
+
 class BudgetAllocation(Base):
     __tablename__ = "budget_allocations"
 
     id = Column(Integer, primary_key=True, index=True)
     budget_id = Column(Integer, ForeignKey("budgets.id"))
-    category = Column(String, nullable=False)
+    name = Column(String, nullable=False)
     allocated = Column(Float, nullable=False)
     spent = Column(Float, default=0.0)
     icon_name = Column(String, nullable=True)
-    
+    planned_spend = Column(Float, default=0.0)
     budget = relationship("Budget", back_populates="allocations")
 
 

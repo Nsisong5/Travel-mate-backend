@@ -23,6 +23,10 @@ from users.active_ai_recommendations import router as active_router
 from routers.budget import router as budget_router
 from routers.YearlyBudget import router as y_router
 from routers.destination  import router as destination_router
+from routers.etinerary import router as etinerary_router
+from Models.etinerary import Etinerary
+from AIService import AIService
+import json
 import os
 
 
@@ -59,6 +63,11 @@ app.include_router(budget_routes)
 app.include_router(uploads)
 app.include_router(rcmdt_router, prefix="/user")
 app.include_router(avatar_router, tags=["avatars"])
+app.include_router(etinerary_router)
+
+
+GROQ_API_KEY = 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
+UNSPLASH_ACCESS_KEY = T58MA_69ow9Xh5mpmC5j-rfcAm9SU2gp6jNELpS5rgw
 
 
 
@@ -142,7 +151,47 @@ def patch_profile_extended(
     
     return user
 
+@app.get("/AITest")
+def get_profile():
+    user_data_format = {
+    "past_trips": [  # List of user's previous trips
+        {
+            "destination": "Paris, France",      # Required: Full destination name
+            "type": "leisure",                   # Optional: trip type
+            "duration": 5,                       # Optional: days
+            "budget": 120,                       # Optional: daily budget
+            "rating": 4.5,                       # Optional: user's rating of trip
+            "year": 2023,                        # Optional: when they traveled
+            "activities": ["museums", "food"]     # Optional: what they did
+        },
+        {
+            "destination": "Tokyo, Japan",
+            "type": "cultural", 
+            "duration": 7,
+            "budget": 150,
+            "rating": 5.0,
+            "year": 2023,
+            "activities": ["temples", "shopping", "food"]
+        },
+        
+    ],
+    
+    "preferences": {  
+        "lifestyle": "balanced",             
+        "travel_style": "moderate",    
+        "group_type": "solo",                
+        "activities": "museums, food, nature", 
+        "interests": "history, culture, art",
+        "accommodation": "mid-range",     
+        "food_preference": "local",           
+        "pace": "relaxed",                    
+        "budget_range": "moderate"          
+    }
+   }
 
+    
+   return AIService.get_destination_recommendations(user_data_format)
+    
 @app.get("/user/profile", response_model=schemas.UserOut)
 def get_profile(user: models.User = Depends(get_current_user)):
     return user
@@ -168,6 +217,22 @@ def trips_history(db: Session = Depends(get_db), user: models.User = Depends(get
 def trips_upcoming(db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
     trips = db.query(models.Trip).filter(models.Trip.user_id == user.id, models.Trip.status.in_([models.TripStatus.planned, models.TripStatus.planned])).all()
     return trips
+
+
+
+
+@app.patch("/trips/{trip_id}", response_model=schemas.TripOut)
+def update_trip(trip_id: str, updates: schemas.TripCreate, db: Session = Depends(get_db)):
+    trip = db.query(models.Trip).filter(models.Trip.id == trip_id).first()
+    if not trip:
+        raise HTTPException(status_code=404, detail="trip not found")
+    
+    for key, value in updates.dict(exclude_unset=True).items():
+        setattr(trip, key, value)
+    
+    db.commit()
+    db.refresh(trip)
+    return trip
 
 
 
@@ -209,17 +274,28 @@ def create_trip(
             cost_estimated = payload.cost_estimated or True,
             state = payload.state or None,
             country = payload.country or None,
-            local_gov = payload.local_gov or None
+            local_gov = payload.local_gov or None,
+            title = payload.title or None,
+            travelers= payload.travelers or 1
                # Enum will be handled automatically
         )
-        
-        print(f"Trip object created successfully")
-        
         db.add(trip)
+        db.flush()
+               
+        
+        itinerary  = Etinerary(
+        title = "Arrival",
+        day = "1",
+        trip_id = trip.id,
+        items = json.dumps([]))
+      
+        db.add(itinerary)  
+
         db.commit()
         db.refresh(trip)
+        db.refresh(trip)
         
-        print(f"Trip saved successfully with ID: {trip.id}")
+        print(f"Itinerary saved successfully with ID: {itinerary.id}")
         return trip
         
     except Exception as e:
@@ -311,19 +387,7 @@ def recommendations(user: models.User = Depends(get_current_user)):
         ]
     }
 
-# Seed helper (optional): create a user + sample trips quickly
-@app.post("/dev/seed")
-def dev_seed(db: Session = Depends(get_db)):
-    if not db.query(models.User).filter_by(email="demo@travelmate.app").first():
-        from .auth import hash_password
-        u = models.User(email="demo@travelmate.app", hashed_password=hash_password("demo123"), full_name="Demo User")
-        db.add(u); db.commit(); db.refresh(u)
-        trips = [
-            models.Trip(user_id=u.id, destination="Paris", duration="5 days", cost=1500, status=models.TripStatus.completed),
-            models.Trip(user_id=u.id, destination="Tokyo", duration="9 days", cost=3500, status=models.TripStatus.upcoming),
-        ]
-        db.add_all(trips); db.commit()
-    return {"ok": True}
+#
     
     
 

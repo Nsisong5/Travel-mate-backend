@@ -89,3 +89,9 @@ node_modules/
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
+
+# database 
+travelmate.db
+
+# migrations files
+alembic
