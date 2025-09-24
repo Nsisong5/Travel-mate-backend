@@ -18,6 +18,10 @@ class AIService:
     # ========== DESTINATION RECOMMENDATIONS ==========
     async def get_destination_recommendations(self, user_data: Dict, budget: Optional[float] = None, trip_type: str = "leisure") -> List[Dict]:
         """
+         GROQ_API_KEY = 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
+         UNSPLASH_ACCESS_KEY = T58MA_69ow9Xh5mpmC5j-rfcAm9SU2gp6jNELpS5rgw
+
+
         Get personalized destination recommendations formatted for AIRecommendation table
         
         Args:
