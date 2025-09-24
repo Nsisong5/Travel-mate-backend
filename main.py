@@ -25,7 +25,7 @@ from routers.YearlyBudget import router as y_router
 from routers.destination  import router as destination_router
 from routers.etinerary import router as etinerary_router
 from Models.etinerary import Etinerary
-from AIService import AIService
+from AIService.AIService import ai_service
 import json
 import os
 
@@ -185,16 +185,21 @@ def get_profile():
         "budget_range": "moderate"          
     }
    }
+    response = ai_service.get_destination_recommendations(user_data_format)
+    return response
 
-    
-   return AIService.get_destination_recommendations(user_data_format)
+app = FastAPI()
+
+@app.get("/custom-error/")
+async def custom_error():
+    raise HTTPException(status_code=400, detail="Invalid Request", headers={"X-Error": "CustomHeader"})
     
 @app.get("/user/profile", response_model=schemas.UserOut)
 def get_profile(user: models.User = Depends(get_current_user)):
     return user
 
 
-#Trips
+
 
 @app.get("/trips/history", response_model=list[schemas.TripOut])
 def trips_history(db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):

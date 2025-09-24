@@ -11,12 +11,12 @@ class Settings:
     SECRET_KEY =  os.getenv("SECRET_KEY")
     ALGORITHM =  os.getenv("ALGORITHM")
     # AI APIs
-    GROQ_API_KEY = config("GROQ_API_KEY")
-    HUGGINGFACE_API_KEY = config("HUGGINGFACE_API_KEY")
+    GROQ_API_KEY = os.getenv("GROQ_API_KEY")
+    HUGGINGFACE_API_KEY = os.getenv("HUGGINGFACE_API_KEY")
     
     # Image APIs
-    UNSPLASH_ACCESS_KEY = config("UNSPLASH_ACCESS_KEY")
-    PEXELS_API_KEY = config("PEXELS_API_KEY")
+    UNSPLASH_ACCESS_KEY = os.getenv("UNSPLASH_ACCESS_KEY")
+    PEXELS_API_KEY = os.getenv("PEXELS_API_KEY")
     
     # Free APIs (no keys needed)
     NOMINATIM_BASE_URL = "https://nominatim.openstreetmap.org"
