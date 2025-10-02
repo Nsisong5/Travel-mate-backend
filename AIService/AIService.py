@@ -32,7 +32,7 @@ class AIService:
         include_images: bool = True  # New parameter to control image fetching
     ) -> List[Dict]:
         """
-        Get personalized destination recommendations with images
+        Get personalized destination recommendations formatted for AIRecommendation table
         
         Flow:
         1. Check cache

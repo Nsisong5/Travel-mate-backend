@@ -25,8 +25,12 @@ from routers.YearlyBudget import router as y_router
 from routers.destination  import router as destination_router
 from routers.etinerary import router as etinerary_router
 from Models.etinerary import Etinerary
+<<<<<<< HEAD
 from AIService import AIService
 from AIService.endpoints import router as ai_service_router
+=======
+from AIService.AIService import ai_service
+>>>>>>> bead8e32e7899b8301fd0326754f631a0ee9a5c1
 import json
 import os
 
@@ -176,6 +180,54 @@ def patch_profile_extended(
     
     return user
 
+<<<<<<< HEAD
+=======
+@app.get("/AITest")
+def get_profile():
+    user_data_format = {
+    "past_trips": [  # List of user's previous trips
+        {
+            "destination": "Paris, France",      # Required: Full destination name
+            "type": "leisure",                   # Optional: trip type
+            "duration": 5,                       # Optional: days
+            "budget": 120,                       # Optional: daily budget
+            "rating": 4.5,                       # Optional: user's rating of trip
+            "year": 2023,                        # Optional: when they traveled
+            "activities": ["museums", "food"]     # Optional: what they did
+        },
+        {
+            "destination": "Tokyo, Japan",
+            "type": "cultural", 
+            "duration": 7,
+            "budget": 150,
+            "rating": 5.0,
+            "year": 2023,
+            "activities": ["temples", "shopping", "food"]
+        },
+        
+    ],
+    
+    "preferences": {  
+        "lifestyle": "balanced",             
+        "travel_style": "moderate",    
+        "group_type": "solo",                
+        "activities": "museums, food, nature", 
+        "interests": "history, culture, art",
+        "accommodation": "mid-range",     
+        "food_preference": "local",           
+        "pace": "relaxed",                    
+        "budget_range": "moderate"          
+    }
+   }
+    response = ai_service.get_destination_recommendations(user_data_format)
+    return response
+
+app = FastAPI()
+
+@app.get("/custom-error/")
+async def custom_error():
+    raise HTTPException(status_code=400, detail="Invalid Request", headers={"X-Error": "CustomHeader"})
+>>>>>>> bead8e32e7899b8301fd0326754f631a0ee9a5c1
     
 @app.get("/user/profile", response_model=schemas.UserOut)
 def get_profile(user: models.User = Depends(get_current_user)):
