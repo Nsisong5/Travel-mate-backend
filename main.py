@@ -26,6 +26,7 @@ from routers.destination  import router as destination_router
 from routers.etinerary import router as etinerary_router
 from Models.etinerary import Etinerary
 from AIService import AIService
+from AIService.endpoints import router as ai_service_router
 import json
 import os
 
@@ -51,7 +52,7 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
+app.include_router(ai_service_router)
 app.include_router(y_router)
 app.include_router(destination_router)
 app.include_router(budget_router)
@@ -68,11 +69,38 @@ app.include_router(etinerary_router)
 
 
 
+
+
+
 app.mount(
     "/static/avatars", 
     StaticFiles(directory="uploads/avatars"), 
     name="avatars"
 )
+
+from groq import Groq
+@app.get("/test/groq")
+async def test_groq():
+   client = Groq()
+   completion = client.chat.completions.create(
+   model="meta-llama/llama-4-scout-17b-16e-instruct",
+   messages=[
+      {
+        "role": "user",
+        "content": "hello there"
+      }
+    ],
+   temperature=1,
+   max_completion_tokens=1024,
+   top_p=1,
+   stream=True,
+   stop=None
+   )
+ 
+   for chunk in completion:
+     print(chunk.choices[0].delta.content or "", end="")  
+   return {"message": completion}
+
 
 @app.on_event("startup")
 async def create_upload_directories():
@@ -148,53 +176,13 @@ def patch_profile_extended(
     
     return user
 
-@app.get("/AITest")
-def get_profile():
-    user_data_format = {
-    "past_trips": [  # List of user's previous trips
-        {
-            "destination": "Paris, France",      # Required: Full destination name
-            "type": "leisure",                   # Optional: trip type
-            "duration": 5,                       # Optional: days
-            "budget": 120,                       # Optional: daily budget
-            "rating": 4.5,                       # Optional: user's rating of trip
-            "year": 2023,                        # Optional: when they traveled
-            "activities": ["museums", "food"]     # Optional: what they did
-        },
-        {
-            "destination": "Tokyo, Japan",
-            "type": "cultural", 
-            "duration": 7,
-            "budget": 150,
-            "rating": 5.0,
-            "year": 2023,
-            "activities": ["temples", "shopping", "food"]
-        },
-        
-    ],
-    
-    "preferences": {  
-        "lifestyle": "balanced",             
-        "travel_style": "moderate",    
-        "group_type": "solo",                
-        "activities": "museums, food, nature", 
-        "interests": "history, culture, art",
-        "accommodation": "mid-range",     
-        "food_preference": "local",           
-        "pace": "relaxed",                    
-        "budget_range": "moderate"          
-    }
-   }
-
-    
-   return AIService.get_destination_recommendations(user_data_format)
     
 @app.get("/user/profile", response_model=schemas.UserOut)
 def get_profile(user: models.User = Depends(get_current_user)):
     return user
 
 
-#Trips
+
 
 @app.get("/trips/history", response_model=list[schemas.TripOut])
 def trips_history(db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
