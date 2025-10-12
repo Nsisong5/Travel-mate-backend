@@ -25,12 +25,11 @@ from routers.YearlyBudget import router as y_router
 from routers.destination  import router as destination_router
 from routers.etinerary import router as etinerary_router
 from Models.etinerary import Etinerary
-<<<<<<< HEAD
+from AIService.travel_tips_endpoints import router as travel_tips_router
+from AIService.recommendations_control import router as c_router
 from AIService import AIService
 from AIService.endpoints import router as ai_service_router
-=======
-from AIService.AIService import ai_service
->>>>>>> bead8e32e7899b8301fd0326754f631a0ee9a5c1
+
 import json
 import os
 
@@ -56,6 +55,8 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+app.include_router(travel_tips_router)
+app.include_router(c_router)
 app.include_router(ai_service_router)
 app.include_router(y_router)
 app.include_router(destination_router)
@@ -82,28 +83,6 @@ app.mount(
     name="avatars"
 )
 
-from groq import Groq
-@app.get("/test/groq")
-async def test_groq():
-   client = Groq()
-   completion = client.chat.completions.create(
-   model="meta-llama/llama-4-scout-17b-16e-instruct",
-   messages=[
-      {
-        "role": "user",
-        "content": "hello there"
-      }
-    ],
-   temperature=1,
-   max_completion_tokens=1024,
-   top_p=1,
-   stream=True,
-   stop=None
-   )
- 
-   for chunk in completion:
-     print(chunk.choices[0].delta.content or "", end="")  
-   return {"message": completion}
 
 
 @app.on_event("startup")
@@ -180,8 +159,8 @@ def patch_profile_extended(
     
     return user
 
-<<<<<<< HEAD
-=======
+
+
 @app.get("/AITest")
 def get_profile():
     user_data_format = {
@@ -222,12 +201,11 @@ def get_profile():
     response = ai_service.get_destination_recommendations(user_data_format)
     return response
 
-app = FastAPI()
+
 
 @app.get("/custom-error/")
 async def custom_error():
     raise HTTPException(status_code=400, detail="Invalid Request", headers={"X-Error": "CustomHeader"})
->>>>>>> bead8e32e7899b8301fd0326754f631a0ee9a5c1
     
 @app.get("/user/profile", response_model=schemas.UserOut)
 def get_profile(user: models.User = Depends(get_current_user)):
@@ -404,7 +382,7 @@ def delete(
         raise HTTPException(status_code=500, detail="Failed deleting Saveplace map: {str(e)}")
 
 @app.post("/places", response_model=schemas.SavedPlaceOut)
-def add_saved_place(payload: schemas.SavedPlaceCreate, db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
+def add_saved_plac(payload: schemas.SavedPlaceCreate, db: Session = Depends(get_db), user: models.User = Depends(get_current_user)):
     sp = models.SavedPlace(
      user_id=user.id,
      rec_id = payload.rec_id)

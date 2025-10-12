@@ -21,10 +21,6 @@ def create_recommendation(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    Create and persist a new AI recommendation.
-    In production this could be called after AI model returns result.
-    """
     rec = ActiveTripAIRecommendation(
         rec_id=payload.rec_id,
         title=payload.title,
@@ -41,7 +37,7 @@ def create_recommendation(
         rating=payload.rating or 0.0,
         in_itinerary=1 if payload.in_itinerary else 0,
         user_id=current_user.id,
-        trip_id=payload.trip_id,
+        trip_id=payload.trip_id
     )
     db.add(rec)
     db.commit()
@@ -49,19 +45,14 @@ def create_recommendation(
     return rec
 
 
-@router.get("/", response_model=List[ActiveAIRecommendationOut])
+@router.get("/current_trip/{trip_id}", response_model=List[ActiveAIRecommendationOut])
 def list_recommendations_for_user(
     trip_id: Optional[int] = None,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    """
-    List recommendations for the current user, optionally filtered by trip.
-    """
-    q = db.query(ActiveTripAIRecommendation).filter(ActiveTripAIRecommendation.user_id == current_user.id)
-    if trip_id is not None:
-        q = q.filter(ActiveTripAIRecommendation.trip_id == trip_id)
-    results = q.order_by(ActiveTripAIRecommendation.created_at.desc()).all()
+    q = db.query(ActiveTripAIRecommendation).filter(ActiveTripAIRecommendation.trip_id == trip_id)
+    results = q.order_by(ActiveTripAIRecommendation.created_at.desc()).all()    
     return results
 
 

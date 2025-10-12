@@ -4,6 +4,7 @@ import Schemas.destination as schemas
 
 
 def create_destination(db: Session, destination: schemas.DestinationCreate):
+    
     db_destination = models.Destination(
         name=destination.name,
         country=destination.country,

@@ -5,6 +5,7 @@ import logging
 from typing import List, Dict, Optional
 from datetime import datetime
 from core.config import settings
+import json 
 
 logger = logging.getLogger(__name__)
 

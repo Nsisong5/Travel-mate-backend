@@ -132,6 +132,7 @@ class Trip(Base):
     title = Column(String, nullable=True)
     travelers = Column(Integer, nullable=True)
     # Relationship
+    tips = relationship("TravelTips", back_populates="trip", uselist=False)
     owner = relationship("User", back_populates="trips")
     etineraries = relationship("Etinerary",back_populates="trip")
     active_ai_recommendations = relationship(
@@ -243,11 +244,26 @@ class ActiveTripAIRecommendation(Base):
     popularity = Column(Integer, default=0, index=True)
     rating = Column(Float, default=0.0)
     in_itinerary = Column(Integer, default=0)  # 0/1 integer to keep it DB simple
-
+    tags = Column(JSON, nullable=True)            # Array of tags (["Luxury", "Popular"])
+    
     created_at = Column(DateTime, default=datetime.utcnow, index=True)
     updated_at = Column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
     # Relationships (adjust "back_populates" if names differ)
     user = relationship("User", back_populates="active_ai_recommendations", foreign_keys=[user_id])
-    trip = relationship("Trip", back_populates="active_ai_recommendations", foreign_keys=[trip_id])            
+    trip = relationship("Trip", back_populates="active_ai_recommendations", foreign_keys=[trip_id])
+    
+                
+  
+class TravelTips(Base):
+    __tablename__ = "travel_tips"
+
+    id = Column(Integer, primary_key=True, index=True)
+    # Foreign Key linking to the Trip table (one-to-one relationship)
+    trip_id = Column(Integer, ForeignKey("trips.id"), unique=True, nullable=False)    
+    formatted_tips_json = Column(Text, nullable=False)
+    
+    # Define the relationship to Trip
+    trip = relationship("Trip", back_populates="tips")
+                                                        
                     

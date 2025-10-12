@@ -1,11 +1,18 @@
 # api/travel_endpoints.py
-from fastapi import APIRouter, HTTPException
+
+from fastapi import APIRouter, HTTPException, Depends 
 from pydantic import BaseModel
 from typing import List, Dict, Optional
 import logging
 from datetime import datetime
+from deps import get_current_user
+from sqlalchemy.orm import Session
+from database import get_db
+from AIService.utils import save_travel_tips_to_db
+import models
+import schemas
 
-# Import your AI service
+
 from AIService.AIService import ai_service 
 from AIService.image_service import ImageService
 # Setup
@@ -22,12 +29,16 @@ class DestinationRequest(BaseModel):
     trip_type: str = "leisure"
 
 class CurrentTripRequest(BaseModel):
+    id: int
     destination: str
+    country: str
     trip_type: str = "leisure" 
-    duration: int = 5
+    duration: str
 
 class TravelTipsRequest(BaseModel):
+    trip_id: int
     destination: str
+    country: str
     season: str = "current"
 
 # ========== MOCK DATA ==========
@@ -217,12 +228,14 @@ async def get_destination_recommendations(request: DestinationRequest):
         logger.info(f"User has {len(user_data['past_trips'])} past trips")
         
         # Call your AI service
+        
         recommendations = await ai_service.get_destination_recommendations(
             user_data=user_data,
             budget=request.budget,
             trip_type=request.trip_type
         )
-        
+     
+              
         processing_time = (datetime.now() - start_time).total_seconds()
         
         return {
@@ -247,7 +260,11 @@ async def get_destination_recommendations(request: DestinationRequest):
         raise HTTPException(status_code=500, detail=f"Failed to get recommendations: {str(e)}")
 
 @router.post("/current-trip")
-async def get_current_trip_recommendations(request: CurrentTripRequest):
+async def get_current_trip_recommendations(
+   request: CurrentTripRequest,
+   db: Session = Depends(get_db),
+   user = Depends(get_current_user)):
+    
     """
     Get AI recommendations for current trip activities
     
@@ -261,15 +278,39 @@ async def get_current_trip_recommendations(request: CurrentTripRequest):
     try:
         logger.info(f"Getting current trip recommendations for {request.destination}")
         
-        # Call your AI service
+       
         recommendations = await ai_service.get_current_trip_recommendations(
             destination=request.destination,
+            country = request.country,
             trip_type=request.trip_type,
             duration=request.duration
         )
-        
-        processing_time = (datetime.now() - start_time).total_seconds()
-        
+     
+        for recommendation in  recommendations:
+             print(recommendation)
+             print()  
+             db_recommendation = models.ActiveTripAIRecommendation(          
+        title=recommendation.get("title"),
+        destination=recommendation.get("destination"),
+        category=recommendation.get("category"),
+        cover_image=recommendation.get("coverImage"),
+        images=recommendation.get("images") or [],
+        description=recommendation.get("description"),
+        cultural_tips=recommendation.get("culturalTips") or [],
+        location = recommendation.get("location") if recommendation.get("location") else None,
+        best_time=recommendation.get("bestTime"),
+        estimated_cost=recommendation.get("estimatedCost"),
+        popularity=recommendation.get("popularity") or 0,
+        rating=recommendation.get("rating") or 0.0,
+        tags= recommendation.get("tags"),
+        in_itinerary=1 if recommendation.get("inItinerary") else 0,
+        user_id=user.id,
+        trip_id=request.id    
+             )
+             db.add(db_recommendation)
+             db.commit()
+             db.refresh(db_recommendation)
+        processing_time = (datetime.now() - start_time).total_seconds()                                 
         return {
             "success": True,
             "destination": request.destination,
@@ -285,10 +326,14 @@ async def get_current_trip_recommendations(request: CurrentTripRequest):
         
     except Exception as e:
         logger.error(f"Error getting current trip recommendations: {e}")
-        raise HTTPException(status_code=500, detail=f"Failed to get trip recommendations: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Failed: {str(e)}")
 
 @router.post("/travel-tips")
-async def get_travel_tips(request: TravelTipsRequest):
+async def get_travel_tips(
+ request: TravelTipsRequest,
+  db: Session = Depends(get_db) 
+ 
+):
     """
     Get AI travel tips for a destination
     
@@ -298,27 +343,21 @@ async def get_travel_tips(request: TravelTipsRequest):
     """
     
     start_time = datetime.now()
-    
+
     try:
         logger.info(f"Getting travel tips for {request.destination} in {request.season}")
         
         # Call your AI service
         tips = await ai_service.get_travel_tips(
             destination=request.destination,
+            country=request.country,
             season=request.season
-        )
-        
+            
+        )                
         processing_time = (datetime.now() - start_time).total_seconds()
-        
-        return {
-            "success": True,
-            "destination": request.destination,
-            "season": request.season,
-            "tips": tips,
-            "sections": list(tips.keys()) if tips else [],
-            "processing_time_seconds": round(processing_time, 2)
-        }
-        
+        save_data = save_travel_tips_to_db(db, request.trip_id,tips)        
+        print("travel tips data save to database:",save_data)
+        return save_data
     except Exception as e:
         logger.error(f"Error getting travel tips: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to get travel tips: {str(e)}")
@@ -368,6 +407,7 @@ async def test_images():
         {"name": "Tokyo", "location": "Japan", "title": "Tokyo, Japan", "settlement_type": "city"}
     ]
     
+    
     enhanced = await image_service.enhance_destinations_with_images(destinations, 4)
     
     return {
@@ -380,3 +420,23 @@ async def test_images():
             "total_images": sum(1 for img in [enhanced[0].get(f"image{i}") for i in ['', '2', '3', '4']] if img)
         }
     }
+    
+    
+    
+
+
+
+@router.post("/ai_rec_detail/{rec_id}", response_model=schemas.ActiveAIRecommendationOut)
+async def get_current_trip_recommendations_detail(
+   rec_id: int,
+   db: Session = Depends(get_db),
+   user = Depends(get_current_user)):
+   
+   try:
+        rec = db.query(models.ActiveTripAIRecommendation.id == rec_id).first()
+        return rec
+   except Exception as e:
+       raise HTTPException(status_code=500, detail=f"fail to fetch recommendation: {e}")
+       
+       
+        

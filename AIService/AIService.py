@@ -112,6 +112,7 @@ class AIService:
     async def get_current_trip_recommendations(
         self, 
         destination: str, 
+        country: str,
         trip_type: str = "leisure", 
         duration: int = 3,
         include_images: bool = True  # New parameter to control image fetching
@@ -134,7 +135,7 @@ class AIService:
             logger.info("Returning cached trip recommendations with images")
             return cached_result
         
-        prompt = self._create_current_trip_prompt(destination, trip_type, duration)
+        prompt = self._create_current_trip_prompt(destination, country,trip_type, duration)
         
         try:
             # STEP 1: Get AI recommendations
@@ -163,7 +164,7 @@ class AIService:
                 logger.info("Fetching images for all activities (batch processing)...")
                 formatted_recommendations = await self.image_service.enhance_trip_activities_with_images(
                     formatted_recommendations,
-                    images_per_activity=2  # Get 2 images per activity
+                    images_per_activity=1  # Get 2 images per activity
                 )
                 logger.info("All activities enhanced with images")
             
@@ -181,7 +182,7 @@ class AIService:
             return self._fallback_current_trip_recommendations(destination, include_images)
     
     # ========== TRAVEL TIPS ==========
-    async def get_travel_tips(self, destination: str, season: str = "current") -> Dict:
+    async def get_travel_tips(self, destination: str,country: str, season: str = "current") -> Dict:
         """Get comprehensive travel tips for destination (no images needed)"""
         
         cache_key = f"tips_{destination}_{season}"
@@ -190,7 +191,7 @@ class AIService:
             logger.info("Returning cached travel tips")
             return cached_result
         
-        prompt = self._create_travel_tips_prompt(destination, season)
+        prompt = self._create_travel_tips_prompt(destination, country, season)
         
         try:
             response = await self._call_groq_api(
@@ -297,10 +298,10 @@ Requirements:
 
 Return ONLY the JSON, no additional text."""
     
-    def _create_current_trip_prompt(self, destination: str, trip_type: str, duration: int) -> str:
+    def _create_current_trip_prompt(self, destination: str, country: str, trip_type: str, duration: int) -> str:
         """Create prompt for current trip recommendations"""
         
-        return f"""For a {duration}-day {trip_type} trip to {destination}, recommend specific activities and experiences.
+        return f"""For a {duration}-day {trip_type} trip to {destination} in country:{country}, recommend specific activities and experiences.
 
 Return ONLY valid JSON (no markdown, no extra text):
 
@@ -314,7 +315,8 @@ Return ONLY valid JSON (no markdown, no extra text):
             "location": {{"name": "Specific address or area name"}},
             "description": "Detailed 2-3 sentence description",
             "culturalTips": ["Specific tip", "Another tip", "Practical advice"],
-            "aiInsight": "AI Recommended for You"
+            "aiInsight": "AI Recommended for You",
+            "tags": []
         }}
     ]
 }}
@@ -327,13 +329,16 @@ Requirements:
 - location.name: Specific area or landmark
 - description: 150-400 characters
 - culturalTips: 3-4 specific, actionable tips
+- tags: [adventure, luxury etc.]
+- rating: 3.7 not beyond 5,
+- popularity: 1-10 between 1 and 10,
 
 Return ONLY the JSON, no additional text."""
     
-    def _create_travel_tips_prompt(self, destination: str, season: str) -> str:
+    def _create_travel_tips_prompt(self, destination: str, country: str,season: str) -> str:
         """Create prompt for travel tips"""
         
-        return f"""Provide practical travel tips for {destination} in {season}.
+        return f"""Provide practical travel tips for destination:{destination}, country:{country} in season:{season}.
 
 Return ONLY valid JSON (no markdown, no extra text):
 
@@ -403,14 +408,17 @@ Return ONLY the JSON, no additional text."""
             "category": rec.get("category", "Activities"),
             "bestTime": rec.get("bestTime", "Anytime"),
             "estimatedCost": rec.get("estimatedCost", "Varies"),
+            "tags": rec.get("tags", [])[:5],
             "location": rec.get("location", {"name": f"Near {destination}"}),
             "description": rec.get("description", "").strip(),
             "culturalTips": rec.get("culturalTips", []),
             "aiInsight": rec.get("aiInsight", "AI Recommended for You"),
             "inItinerary": False,
-            "destination": destination,
+            "destination": destination, 
+            "popularity": rec.get("popularity"),
+            "rating": rec.get("rating"),
+           
             # Image fields will be populated by ImageService
-            "images": [],
             "coverImage": None
         }
     
@@ -493,6 +501,7 @@ Return ONLY the JSON, no additional text."""
             ]
             for k in expired_keys:
                 del self.cache[k]
+    
     
     # ========== FALLBACK METHODS (enhanced with images) ==========
     async def _fallback_destination_recommendations(

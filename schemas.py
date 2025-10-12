@@ -1,6 +1,6 @@
 
-from pydantic import BaseModel, validator,EmailStr
-from typing import Optional, List
+from pydantic import BaseModel, validator,EmailStr,Field
+from typing import Optional,List,Dict, Any
 from datetime import date
 from enum import Enum
 from datetime import datetime
@@ -367,13 +367,15 @@ class ActiveAIRecommendationBase(BaseModel):
     images: Optional[List[str]] = []
     description: Optional[str] = None
     cultural_tips: Optional[List[str]] = []
+    tags: Optional[List[str]] = None
     location: Optional[LocationSchema] = None
     best_time: Optional[str] = None
     estimated_cost: Optional[str] = None
     popularity: Optional[int] = 0
     rating: Optional[float] = 0.0
     in_itinerary: Optional[bool] = False
-
+    
+        
 class ActiveAIRecommendationCreate(ActiveAIRecommendationBase):
     # trip_id and user_id are handled server-side via get_current_user or route args
     trip_id: Optional[int] = None
@@ -390,6 +392,36 @@ class ActiveAIRecommendationOut(ActiveAIRecommendationBase):
     trip_id: Optional[int]
     created_at: datetime
     updated_at: Optional[datetime]
+    class Config:
+        orm_mode = True  
+        
+                                                                                                                                                                                                                                                                                                                  
+
+
+class FormattedTravelTips(BaseModel):
+    culture_customs: List[str]
+    culture_etiquette: List[str]
+    culture_dress_code: str
+    language_basic_phrases: List[str]
+    language_tips: str
+    practical_currency: str
+    practical_tipping: str
+    practical_transportation: str
+    practical_safety: List[str]
 
     class Config:
-        orm_mode = True                                                                                                                                                                                                                                                                                                                
+        # Pydantic v1 required this for compatibility with SQLAlchemy
+        orm_mode = True # Use 'from_attributes = True' in Pydantic v2
+
+
+class TravelTipsCreate(BaseModel):
+    trip_id: int = Field(..., description="The ID of the trip this tips data belongs to.")
+    raw_tips_data: Dict[str, Any] = Field(..., description="The raw nested JSON data from the AI service.")
+
+
+
+class TravelTipsResponse(BaseModel):    
+    id: int
+    trip_id: int
+    # Use FormattedTravelTips schema for the tips content
+    tips_content: "FormattedTravelTips"                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     ''                                                                                                                                                                                                                                                                                                          
