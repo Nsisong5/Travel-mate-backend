@@ -46,6 +46,7 @@ def get_all_user_ids_sync() -> List[int]:
     with next(get_db()) as db:
        return [user_id for (user_id,) in db.query(models.User.id).all()]
 
+
 async def generate_and_store(user_id=None):
     if user_id:
         user_ids_to_process = [user_id]
@@ -69,7 +70,7 @@ async def generate_and_store(user_id=None):
        await generate_recommendations(uid)  
             
     recommendations_store["last_generated"] = datetime.utcnow()
-    print(f"[{recommendations_store['last_generated']}] Recommendations regenerated for all users.")
+    print(f"[{recommendations_store['last_generated']}] Recommendations regenerated for all users {len(user_ids_to_process)}.")
     
 
 

@@ -198,6 +198,7 @@ def update_ai_recommendation(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Failed to update recommendation: {str(e)}")
 
+
 @router.delete("/ai-recommendations/{recommendation_id}")
 def delete_ai_recommendation(
     recommendation_id: int,
