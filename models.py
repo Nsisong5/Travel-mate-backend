@@ -260,7 +260,7 @@ class TravelTips(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     # Foreign Key linking to the Trip table (one-to-one relationship)
-    trip_id = Column(Integer, ForeignKey("trips.id"), unique=True, nullable=False)    
+    trip_id = Column(Integer,ForeignKey("trips.id", ondelete="CASCADE"))    
     formatted_tips_json = Column(Text, nullable=False)
     
     # Define the relationship to Trip
