@@ -282,6 +282,7 @@ def create_trip(
             start_date=payload.start_date,
             end_date=payload.end_date,
             style=payload.style,
+            has_budget=payload.has_budget,
             duration=duration,
             status=payload.status,  # Enum will be handled automatically
             budget_range=payload.budget_range,

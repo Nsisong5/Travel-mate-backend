@@ -95,6 +95,7 @@ class TripCreate(BaseModel):
     origin: str 
     means : str
     cost_estimated: bool = ...
+    has_budget: Optional[bool] = False 
     rating: Optional[int] = 0
     travelers: Optional[int] = 1
     local_gov: Optional[str] = ""
